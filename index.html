@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistante SEDA — Formation Cils & Pigmentation</title>
+  <meta name="description" content="Assistante virtuelle SEDA Designer — Formation esthétique certifiée Qualiopi à Sens (89)" />
+  <!-- Favicon S -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23C6C0B6'/><text y='.9em' font-size='80' font-family='serif' x='15' fill='white'>S</text></svg>" />
+  <!-- React + Babel CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #FAF8F6; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    // ─── CONFIG ─────────────────────────────────────────────────────────────
+    const NOTION_DB_ID = "32aa73a6-3cf7-80be-aecf-e80c8a867560";
+    const NOTION_MCP   = "https://mcp.notion.com/mcp";
+    const WHATSAPP     = "https://wa.me/33762901319";
+
+    const FETCH_PROMPT = `
+Tu es un extracteur de données Notion. Recherche dans la base "01. 📚 Catalogue formations" de SEDA Designer (database ID: ${NOTION_DB_ID}) toutes les formations dont le statut est "Actif".
+
+Pour chaque formation active, extrait :
+- Intitulé de la formation
+- Durée
+- Prix (sans CPF)
+- Financement éligible (CPF oui/non, FAFCEA, ALMA, OPCO)
+- Statut inscription (Ouvert / Complet / Fermé)
+- Prérequis
+- Public cible
+- Objectifs
+
+Retourne UNIQUEMENT un objet JSON valide, sans markdown ni backticks :
+{"formations":[{"titre":"...","duree":"...","prix_sans_cpf":000,"cpf_eligible":true,"prix_avec_cpf":000,"fafcea":true,"alma":true,"statut_inscription":"Ouvert","prerequis":"...","public":"...","objectifs":"...","places_max":3}],"last_updated":"ISO date"}
+
+Règles prix avec CPF : Extensions cils 2j→1500, 3j→1800 | Combo Browlift+Réhaussement→1500 | Microshading 3j→2250,4j→2400,5j→2800 | Blush Lips 2j→1800,3j→2250,4j→2400 | Combo Micro+Lips 3j→2400,4j→2800,5j→3200 | Perfectionnement 1j→1400,2j→1650 | Coaching→1500
+Places max : dermopigmentation=2, coaching=1, autres=3.`;
+
+    const SYSTEM_BASE = (notionData) => `
+Tu es l'Assistante SEDA, l'assistante virtuelle officielle de SEDA Designer — centre de formation esthétique certifié Qualiopi, fondé par Seda Keskin à Sens (89), 73 rue de la République.
+
+## TA PERSONNALITÉ
+Tu es chaleureuse, directe, professionnelle mais accessible. Tu parles comme une grande sœur bienveillante et experte. Tu tutoies systématiquement. Tes phrases sont courtes et claires. Tu guides toujours vers l'action.
+Ton ton : chaleureux · expert · authentique · élégant
+
+## BASE DE DONNÉES FORMATIONS (synchronisée depuis Notion)
+${notionData}
+
+## FORMATIONS — RÈGLES IMPORTANTES
+- Rehaussement de cils SEUL : NON éligible CPF
+- Browlift SEUL : NON éligible CPF
+- Combo Rehaussement + Browlift ensemble : OUI éligible CPF
+- Extensions de cils : kit TOUJOURS inclus dans le prix
+- Combo Browlift + Rehaussement : SANS kit
+- Perfectionnements : minimum 3 mois d'expérience requis, ouvert à toutes (même hors SEDA)
+- Dermopigmentation : 2 places max par session
+- Cils / Rehaussement / Browlift : 3 places max
+- Coaching privé : 1 place unique
+
+## FINANCEMENT CPF — LOI 2024/2025
+- Plafond : 1 500€ par formation (total, pas par an)
+- Les formations SEDA ne sont PAS cherchables sur Mon Compte Formation
+- Process : contacter Seda sur WhatsApp → lien CPF personnalisé → validation rapide
+
+## FAFCEA (artisans & auto-entrepreneurs)
+- Pour auto-entrepreneurs/chefs d'entreprise artisanale inscrits au Répertoire des Métiers
+- Doit être à jour de sa contribution CFP via URSSAF
+- Jusqu'à 3 000€ selon situation | droits NON cumulables d'une année à l'autre
+- SEDA certifié Qualiopi = éligible FAFCEA ✅
+- Gérants salariés SARL/SAS/SASU : pas éligibles, passent par leur OPCO
+
+## ALMA
+- Paiement en plusieurs fois pour le reste à charge — sans frais cachés
+
+## SEDA DESIGNER CONSULTING (B2B)
+Pour gérantes d'OF et formatrices indépendantes tous secteurs.
+Seda est formatrice certifiée Qualiopi depuis plusieurs années. Elle vend ce qu'elle utilise elle-même.
+
+OFFRE 1 — Pack Documents Qualiopi · 390€
+Tous les documents Qualiopi prêts à personnaliser : programmes, conventions, émargements, évaluations, BPF, règlement intérieur. Livraison PDF + Word.
+
+OFFRE 2 — Agent IA Qualiopi · 990€
+Agent IA installé dans le Notion de la cliente qui surveille les 32 indicateurs Qualiopi, alerte si document manquant, génère les documents à la demande, prépare le dossier avant audit. Inclut installation + session visio 2h.
+
+OFFRE 3 — Abonnement Conformité · 49€/mois
+L'agent tourne en continu, mises à jour réglementaires incluses, support WhatsApp prioritaire.
+
+Accroche B2B : "Tu gères un organisme de formation et le Qualiopi te prend un temps fou ? Seda a créé un agent IA qui pilote ta conformité à ta place — parce qu'elle a vécu exactement la même galère que toi."
+
+## CONTACT
+WhatsApp : ${WHATSAPP}
+Instagram : @sedadesigner.fr
+Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur WhatsApp — elle te répond vite 🤍 👉 ${WHATSAPP}"
+
+## RÈGLES
+- Hésitation entre formations → aide à identifier le projet
+- Reconversion → rassure, valorise CPF/FAFCEA
+- Reste à charge → mentionne Alma
+- Auto-entrepreneur → mentionne FAFCEA
+- Gérante d'OF ou formatrice → bascule B2B, accroche Qualiopi, présente 3 offres, WhatsApp
+- Mentionne Qualiopi/paperasse/administratif/audit → prospect B2B
+- Dates → WhatsApp ou Instagram
+- Tu ne sais pas → dis-le et renvoie vers WhatsApp
+- Termine par une question ouverte ou appel à l'action
+
+## INTERDIT
+- Promettre des résultats financiers
+- Comparer SEDA à la concurrence
+- Répondre hors formations esthétique / OF
+- Inventer des informations`;
+
+    const QUICK_REPLIES = [
+      "Je veux me former en esthétique ✨",
+      "Je gère un organisme de formation",
+      "Comment fonctionne le CPF ?",
+      "Je cherche à me reconvertir 💫",
+    ];
+
+    const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2.5 + 1,
+      duration: Math.random() * 16 + 10,
+      delay: Math.random() * 12,
+      opacity: Math.random() * 0.2 + 0.06,
+    }));
+
+    const FALLBACK_DATA = `
+### Extensions de Cils — Formule 2 jours
+- Durée : 2 jours - 14h | Cil à cil + pose mixte | Kit inclus
+- Sans CPF : 800€ | Avec CPF : 1 500€ | CPF ✅ · FAFCEA ✅ · Alma ✅ | 3 places max
+
+### Extensions de Cils — Formule 3 jours
+- Durée : 3 jours - 18h | Cil à cil + mixte + volume russe | Kit inclus
+- Sans CPF : 1 200€ | Avec CPF : 1 800€ | CPF ✅ · FAFCEA ✅ · Alma ✅ | 3 places max
+
+### Rehaussement de Cils (Lash Lift)
+- NON éligible CPF seul — éligible uniquement en Combo | 3 places max
+
+### Browlift
+- NON éligible CPF seul — éligible uniquement en Combo | 3 places max
+
+### Formation Combo Rehaussement + Browlift
+- 2 jours | Sans CPF : 850€ | Avec CPF : 1 500€ | CPF ✅ · FAFCEA ✅ | 3 places max | Sans kit
+
+### Microshading (sourcils)
+- 3j : 1 800€ / 2 250€CPF | 4j : 2 000€ / 2 400€CPF | 5j : 2 350€ / 2 800€CPF | 2 places max
+
+### Blush Lips (lèvres)
+- 2j : 1 300€ / 1 800€CPF | 3j : 1 800€ / 2 250€CPF | 4j : 2 000€ / 2 400€CPF | 2 places max
+
+### Combo Microshading + Blush Lips
+- 3j : 2 000€ / 2 400€CPF | 4j : 2 350€ / 2 800€CPF | 5j : 2 500€ / 3 200€CPF | 2 places max
+
+### Perfectionnements Micropigmentation
+- 1 jour : 750€ / 1 400€CPF | min. 3 mois expérience | 2 places max
+- 2 jours (combo) : 1 200€ / 1 650€CPF | 2 places max
+
+### Coaching Privé
+- 1 200€ sans CPF | 1 500€ avec CPF | 1 place unique`;
+
+    // ─── COMPONENT ──────────────────────────────────────────────────────────
+    function SedaChatbot() {
+      const [messages, setMessages]     = useState([]);
+      const [input, setInput]           = useState("");
+      const [loading, setLoading]       = useState(false);
+      const [notionData, setNotionData] = useState(null);
+      const [syncing, setSyncing]       = useState(true);
+      const [syncError, setSyncError]   = useState(false);
+      const [msgCount, setMsgCount]     = useState(0);
+      const messagesEndRef              = useRef(null);
+      const inputRef                    = useRef(null);
+
+      useEffect(() => { fetchNotionData(); }, []);
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, [messages, loading]);
+
+      const fetchNotionData = async () => {
+        setSyncing(true);
+        setSyncError(false);
+        try {
+          const res = await fetch("/.netlify/functions/claude", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 2000,
+              system: FETCH_PROMPT,
+              messages: [{ role: "user", content: "Extrais toutes les formations actives de SEDA Designer depuis Notion." }],
+              mcp_servers: [{ type: "url", url: NOTION_MCP, name: "notion" }],
+            }),
+          });
+          const data = await res.json();
+          const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed?.formations) {
+              const lines = parsed.formations.map(f => {
+                const cpf = f.cpf_eligible ? `Avec CPF : ${f.prix_avec_cpf}€` : "Non éligible CPF";
+                const fin = [f.cpf_eligible && "CPF ✅", f.fafcea && "FAFCEA ✅", f.alma && "Alma ✅"].filter(Boolean).join(" · ");
+                return `### ${f.titre}\n- Durée : ${f.duree}\n- Sans CPF : ${f.prix_sans_cpf}€ | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis}`;
+              }).join("\n\n");
+              setNotionData(`${lines}\n\n(Synchronisé depuis Notion — ${new Date().toLocaleDateString("fr-FR")})`);
+              setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nMes informations sont synchronisées en direct avec Notion — je connais toutes les formations, tarifs et disponibilités à jour.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
+              setMsgCount(1);
+              setSyncing(false);
+              return;
+            }
+          }
+          throw new Error("No data");
+        } catch (e) {
+          setSyncError(true);
+          setNotionData(FALLBACK_DATA);
+          setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène, je suis là pour t'orienter.", id: 0 }]);
+          setMsgCount(1);
+        }
+        setSyncing(false);
+      };
+
+      const sendMessage = async (text) => {
+        const userMsg = text || input.trim();
+        if (!userMsg || loading || syncing) return;
+        setInput("");
+        const id = msgCount;
+        setMsgCount(c => c + 2);
+        const userMessage = { role: "user", content: userMsg, id };
+        const newMessages = [...messages, userMessage];
+        setMessages(newMessages);
+        setLoading(true);
+        try {
+          const res = await fetch("/.netlify/functions/claude", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1000,
+              system: SYSTEM_BASE(notionData || FALLBACK_DATA),
+              messages: newMessages.map(({ role, content }) => ({ role, content })),
+            }),
+          });
+          const data = await res.json();
+          const reply = data.content?.[0]?.text || "Je n'ai pas pu répondre. Contacte Seda directement 🤍";
+          setMessages([...newMessages, { role: "assistant", content: reply, id: id + 1 }]);
+        } catch {
+          setMessages([...newMessages, { role: "assistant", content: "Une erreur s'est produite. Contacte Seda sur WhatsApp 🤍", id: id + 1 }]);
+        }
+        setLoading(false);
+        inputRef.current?.focus();
+      };
+
+      const handleKey = (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      };
+
+      const fmt = (text) => text.split("\n").map((line, i, arr) => (
+        React.createElement(React.Fragment, { key: i },
+          line,
+          i < arr.length - 1 && React.createElement("br", null)
+        )
+      ));
+
+      return (
+        <>
+          <style>{CSS}</style>
+          <div className="page">
+            <div className="particles">
+              {PARTICLES.map(p => (
+                <div key={p.id} className="particle" style={{ left: `${p.x}%`, top: `${p.y}%`, width: `${p.size}px`, height: `${p.size}px`, opacity: p.opacity, animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s` }} />
+              ))}
+            </div>
+            <div className="orb orb1" /><div className="orb orb2" />
+
+            <div className="container">
+              <div className="header">
+                <div className="header-shimmer" />
+                <div className="header-top">
+                  <div className="logo-wrap">
+                    <div className="logo-ring"><div className="logo-letter">S</div></div>
+                    <div className="online-dot" />
+                  </div>
+                  <div className="header-info">
+                    <div className="brand-name">SEDA DESIGNER</div>
+                    <div className="brand-sub">Formation Cils & Pigmentation · Sens (89)</div>
+                  </div>
+                </div>
+                <div className="header-bottom">
+                  <span className="assistant-label">✦ Assistante SEDA</span>
+                  <div className="notion-badge">
+                    {syncing ? (
+                      <span className="sync-loading"><span className="sync-dot"/><span className="sync-dot"/><span className="sync-dot"/> Connexion…</span>
+                    ) : syncError ? (
+                      <span className="sync-warn">⚠ Mode hors ligne</span>
+                    ) : (
+                      <span className="sync-ok">
+                        <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        Notion sync
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {syncing && (
+                <div className="sync-overlay">
+                  <div className="sync-spinner" />
+                  <div className="sync-text">Synchronisation des formations<br/>depuis Notion…</div>
+                </div>
+              )}
+
+              {!syncing && (
+                <>
+                  <div className="messages">
+                    {messages.map(msg => (
+                      <div key={msg.id} className={`msg-row ${msg.role}`}>
+                        {msg.role === "assistant" && <div className="avatar">S</div>}
+                        <div className={`bubble ${msg.role}`}>{fmt(msg.content)}</div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="msg-row assistant">
+                        <div className="avatar">S</div>
+                        <div className="bubble assistant">
+                          <div className="typing"><span className="dot"/><span className="dot"/><span className="dot"/></div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {messages.length <= 1 && !loading && (
+                    <div className="quick-wrap">
+                      {QUICK_REPLIES.map(q => (
+                        <button key={q} className="quick-btn" onClick={() => sendMessage(q)}>{q}</button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="input-area">
+                    <div className="input-wrap">
+                      <input ref={inputRef} className="chat-input" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Écris ta question…" disabled={loading} />
+                      <button className="send-btn" onClick={() => sendMessage()} disabled={!input.trim() || loading} style={{ opacity: input.trim() && !loading ? 1 : 0.38 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="footer-tag">SEDA DESIGNER · CERTIFIÉ QUALIOPI</div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // ─── CSS ────────────────────────────────────────────────────────────────
+    const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Playfair+Display:wght@500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 15% 15%,rgba(198,192,182,.2) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(198,192,182,.14) 0%,transparent 50%),#FAF8F6;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden;padding:16px}
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0}
+.particle{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(140,132,128,.7) 0%,transparent 70%);animation:floatP linear infinite}
+@keyframes floatP{0%{transform:translateY(0) translateX(0);opacity:0}12%{opacity:1}88%{opacity:.4}100%{transform:translateY(-70px) translateX(18px);opacity:0}}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.orb1{width:350px;height:350px;background:radial-gradient(circle,rgba(198,192,182,.32) 0%,transparent 70%);top:-100px;left:-80px}
+.orb2{width:280px;height:280px;background:radial-gradient(circle,rgba(198,192,182,.25) 0%,transparent 70%);bottom:-70px;right:-50px}
+.container{width:100%;max-width:430px;min-height:660px;max-height:92vh;background:#FFF;border:1px solid rgba(198,192,182,.35);border-radius:30px;display:flex;flex-direction:column;position:relative;z-index:1;overflow:hidden;box-shadow:0 2px 0 rgba(198,192,182,.5),0 20px 60px rgba(140,132,128,.18);animation:slideUp .65s cubic-bezier(.16,1,.3,1) both}
+@keyframes slideUp{from{opacity:0;transform:translateY(35px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.header{padding:22px 22px 14px;background:linear-gradient(160deg,#F7F4F1 0%,#FAF8F6 100%);border-bottom:1px solid rgba(198,192,182,.3);position:relative;overflow:hidden;flex-shrink:0}
+.header-shimmer{position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmer 5s ease-in-out infinite}
+@keyframes shimmer{0%{left:-100%}50%{left:150%}100%{left:150%}}
+.header-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.logo-wrap{position:relative;flex-shrink:0}
+.logo-ring{width:50px;height:50px;border-radius:50%;background:linear-gradient(145deg,#C6C0B6,#B0AA9F);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(140,132,128,.3),inset 0 1px 0 rgba(255,255,255,.35);animation:logoBreath 4s ease-in-out infinite}
+@keyframes logoBreath{0%,100%{box-shadow:0 4px 16px rgba(140,132,128,.3),inset 0 1px 0 rgba(255,255,255,.35)}50%{box-shadow:0 6px 24px rgba(140,132,128,.4),inset 0 1px 0 rgba(255,255,255,.35)}}
+.logo-letter{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#FFF;letter-spacing:1px}
+.online-dot{position:absolute;bottom:1px;right:1px;width:13px;height:13px;border-radius:50%;background:#5FBF85;border:2.5px solid #F7F4F1;animation:dotPulse 2.5s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(95,191,133,.45)}50%{box-shadow:0 0 0 5px rgba(95,191,133,0)}}
+.header-info{flex:1}
+.brand-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;letter-spacing:.2em;color:#5C5550;line-height:1.2}
+.brand-sub{font-size:10.5px;color:#8C8480;letter-spacing:.04em;margin-top:4px;font-weight:300}
+.header-bottom{display:flex;align-items:center;justify-content:space-between}
+.assistant-label{font-size:11px;color:#8C8480;letter-spacing:.07em;font-style:italic;font-weight:300}
+.notion-badge{font-size:9.5px;font-weight:500;letter-spacing:.04em}
+.sync-ok{display:flex;align-items:center;gap:4px;color:#5FBF85;background:rgba(95,191,133,.1);border:1px solid rgba(95,191,133,.3);padding:2px 8px;border-radius:20px}
+.sync-warn{color:#E09B2D;background:rgba(224,155,45,.1);border:1px solid rgba(224,155,45,.3);padding:2px 8px;border-radius:20px}
+.sync-loading{display:flex;align-items:center;gap:5px;color:#8C8480;padding:2px 0}
+.sync-dot{width:4px;height:4px;border-radius:50%;background:#C6C0B6;animation:dotAnim2 1.2s ease-in-out infinite}
+.sync-dot:nth-child(2){animation-delay:.2s}.sync-dot:nth-child(3){animation-delay:.4s}
+@keyframes dotAnim2{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-3px);opacity:1}}
+.sync-overlay{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:#FFF}
+.sync-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(198,192,182,.3);border-top-color:#C6C0B6;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-text{text-align:center;font-size:13px;color:#8C8480;line-height:1.6;letter-spacing:.02em}
+.messages{flex:1;overflow-y:auto;padding:18px 15px;display:flex;flex-direction:column;gap:11px;scrollbar-width:none;background:#FFF}
+.messages::-webkit-scrollbar{display:none}
+.msg-row{display:flex;align-items:flex-end;gap:8px;animation:msgIn .38s cubic-bezier(.16,1,.3,1) both}
+.msg-row.user{justify-content:flex-end}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#C6C0B6,#B0AA9F);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:#FFF;flex-shrink:0;box-shadow:0 2px 10px rgba(140,132,128,.28)}
+.bubble{max-width:74%;font-size:13.5px;line-height:1.7;letter-spacing:.01em;padding:12px 16px;animation:bubbleIn .32s cubic-bezier(.16,1,.3,1) both}
+@keyframes bubbleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.bubble.assistant{background:#F7F4F1;border:1px solid rgba(198,192,182,.4);border-radius:18px 18px 18px 4px;color:#5C5550;box-shadow:0 2px 12px rgba(140,132,128,.1)}
+.bubble.user{background:linear-gradient(135deg,#C6C0B6,#B8B2A8);border-radius:18px 18px 4px 18px;color:#FFF;box-shadow:0 3px 14px rgba(140,132,128,.3)}
+.typing{display:flex;gap:5px;align-items:center;height:18px}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#C6C0B6;animation:dotAnim 1.4s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes dotAnim{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.quick-wrap{padding:0 15px 12px;display:flex;flex-direction:column;gap:7px;flex-shrink:0;background:#FFF}
+.quick-btn{background:#FFF;border:1px solid rgba(198,192,182,.5);border-radius:14px;padding:10px 16px;font-size:12.5px;color:#5C5550;cursor:pointer;text-align:left;letter-spacing:.02em;transition:all .22s ease;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden}
+.quick-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(198,192,182,.15),transparent);transform:translateX(-100%);transition:transform .5s ease}
+.quick-btn:hover::after{transform:translateX(100%)}
+.quick-btn:hover{background:#F7F4F1;border-color:rgba(198,192,182,.8);color:#3D3733;transform:translateX(4px)}
+.input-area{padding:12px 15px 18px;border-top:1px solid rgba(198,192,182,.25);flex-shrink:0;background:#F7F4F1}
+.input-wrap{display:flex;align-items:center;gap:9px;background:#FFF;border:1px solid rgba(198,192,182,.4);border-radius:16px;padding:4px 4px 4px 16px;transition:all .22s ease;box-shadow:0 1px 4px rgba(140,132,128,.08)}
+.input-wrap:focus-within{border-color:rgba(140,132,128,.6);box-shadow:0 0 0 3px rgba(198,192,182,.18)}
+.chat-input{flex:1;background:transparent;border:none;outline:none;font-size:13.5px;color:#5C5550;font-family:'DM Sans',sans-serif;letter-spacing:.01em;padding:8px 0}
+.chat-input::placeholder{color:rgba(140,132,128,.45)}
+.send-btn{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#C6C0B6,#B0AA9F);border:none;color:#FFF;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .22s ease;flex-shrink:0;box-shadow:0 2px 10px rgba(140,132,128,.3)}
+.send-btn:hover:not(:disabled){background:linear-gradient(145deg,#B8B2A8,#A8A29A);transform:scale(1.06)}
+.footer-tag{text-align:center;font-size:9px;color:rgba(140,132,128,.45);letter-spacing:.14em;margin-top:10px;font-weight:500}
+    `;
+
+    // ─── RENDER ─────────────────────────────────────────────────────────────
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(SedaChatbot));
+  </script>
+</body>
+</html>
