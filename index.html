@@ -174,7 +174,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
         setSyncing(true);
         setSyncError(false);
         try {
-          const res = await fetch("/.netlify/functions/formations");
+          const res = await fetch("/api/formations");
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const parsed = await res.json();
           if (!parsed?.formations?.length) throw new Error("No formations returned");
@@ -210,7 +210,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
         setMessages(newMessages);
         setLoading(true);
         try {
-          const res = await fetch("/.netlify/functions/claude", {
+          const res = await fetch("/api/claude", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
