@@ -119,7 +119,8 @@ Quand tu invites la prospect à choisir un axe, présente TOUJOURS ces 6 catégo
 - Gérante d'OF ou formatrice → bascule B2B, accroche Qualiopi, présente 3 offres, WhatsApp
 - Mentionne Qualiopi/paperasse/administratif/audit → prospect B2B
 - Dates → WhatsApp ou Instagram
-- Tu ne sais pas → dis-le et renvoie vers WhatsApp
+- Question pédagogique précise (techniques enseignées, modules, contenu d'un programme) → utilise EN PRIORITÉ le "Programme détaillé" de la formation concernée (présent dans la base de données pour chaque formation). Ne renvoie PAS vers WhatsApp si la réponse est dans le programme. Exemple : "bouquets à la main ou préfaits ?" → cherche dans le programme du Volume Russe la mention "pinch, lonely fan" et réponds précisément.
+- Vraie inconnue (info absente du programme et des règles ci-dessus) → dis-le honnêtement et renvoie vers WhatsApp
 - Termine par une question ouverte ou appel à l'action
 
 ## INTERDIT
@@ -212,8 +213,11 @@ Quand tu invites la prospect à choisir un axe, présente TOUJOURS ces 6 catégo
             const cpf = f.cpf_eligible && f.prix_avec_cpf ? `Avec CPF : ${f.prix_avec_cpf}€` : "Non éligible CPF";
             const fin = [f.cpf_eligible && "CPF ✅", f.fafcea && "FAFCEA ✅", f.alma && "Alma ✅", f.opco && "OPCO ✅"].filter(Boolean).join(" · ");
             const prixSans = f.prix_sans_cpf != null ? `Sans CPF : ${f.prix_sans_cpf}€` : "Prix sur demande";
-            return `### ${f.titre}\n- Durée : ${f.duree || "—"}\n- ${prixSans} | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription || "—"} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis || "Aucun"}`;
-          }).join("\n\n");
+            const objectifs = f.objectifs ? `\n- Objectifs : ${f.objectifs}` : "";
+            const publicCible = f.public ? `\n- Public cible : ${f.public}` : "";
+            const programme = f.programme ? `\n\nProgramme détaillé :\n${f.programme}` : "";
+            return `### ${f.titre}\n- Durée : ${f.duree || "—"}\n- ${prixSans} | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription || "—"} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis || "Aucun"}${objectifs}${publicCible}${programme}`;
+          }).join("\n\n---\n\n");
 
           setNotionData(`${lines}\n\n(Catalogue à jour au ${new Date().toLocaleDateString("fr-FR")})`);
           setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nJe connais toutes les formations, tarifs et disponibilités à jour en temps réel.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
