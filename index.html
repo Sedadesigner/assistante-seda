@@ -32,7 +32,7 @@ Tu es l'Assistante SEDA, l'assistante virtuelle officielle de SEDA Designer — 
 Tu es chaleureuse, directe, professionnelle mais accessible. Tu parles comme une grande sœur bienveillante et experte. Tu tutoies systématiquement. Tes phrases sont courtes et claires. Tu guides toujours vers l'action.
 Ton ton : chaleureux · expert · authentique · élégant
 
-## BASE DE DONNÉES FORMATIONS (synchronisée depuis Notion)
+## BASE DE DONNÉES FORMATIONS (à jour en temps réel)
 ${notionData}
 
 ## FORMATIONS — RÈGLES IMPORTANTES
@@ -173,7 +173,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
         setSyncing(true);
         setSyncError(false);
         try {
-          const res = await fetch("/.netlify/functions/notion");
+          const res = await fetch("/.netlify/functions/formations");
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const parsed = await res.json();
           if (!parsed?.formations?.length) throw new Error("No formations returned");
@@ -185,8 +185,8 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
             return `### ${f.titre}\n- Durée : ${f.duree || "—"}\n- ${prixSans} | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription || "—"} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis || "Aucun"}`;
           }).join("\n\n");
 
-          setNotionData(`${lines}\n\n(Synchronisé depuis Notion — ${new Date().toLocaleDateString("fr-FR")})`);
-          setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nMes informations sont synchronisées en direct avec Notion — je connais toutes les formations, tarifs et disponibilités à jour.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
+          setNotionData(`${lines}\n\n(Catalogue à jour au ${new Date().toLocaleDateString("fr-FR")})`);
+          setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nJe connais toutes les formations, tarifs et disponibilités à jour en temps réel.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
           setMsgCount(1);
         } catch (e) {
           console.error("Notion sync error:", e);
@@ -274,7 +274,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
                     ) : (
                       <span className="sync-ok">
                         <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        Notion sync
+                        Catalogue à jour
                       </span>
                     )}
                   </div>
@@ -284,7 +284,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
               {syncing && (
                 <div className="sync-overlay">
                   <div className="sync-spinner" />
-                  <div className="sync-text">Synchronisation des formations<br/>depuis Notion…</div>
+                  <div className="sync-text">Chargement du catalogue<br/>de formations…</div>
                 </div>
               )}
 
