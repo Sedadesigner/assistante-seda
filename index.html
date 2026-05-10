@@ -195,7 +195,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
+              model: "claude-sonnet-4-6",
               max_tokens: 2000,
               system: FETCH_PROMPT,
               messages: [{ role: "user", content: "Extrais toutes les formations actives de SEDA Designer depuis Notion." }],
@@ -245,7 +245,7 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
+              model: "claude-sonnet-4-6",
               max_tokens: 1000,
               system: SYSTEM_BASE(notionData || FALLBACK_DATA),
               messages: newMessages.map(({ role, content }) => ({ role, content })),
