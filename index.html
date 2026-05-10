@@ -23,28 +23,7 @@
     const { useState, useRef, useEffect } = React;
 
     // ─── CONFIG ─────────────────────────────────────────────────────────────
-    const NOTION_DB_ID = "32aa73a6-3cf7-80be-aecf-e80c8a867560";
-    const NOTION_MCP   = "https://mcp.notion.com/mcp";
-    const WHATSAPP     = "https://wa.me/33762901319";
-
-    const FETCH_PROMPT = `
-Tu es un extracteur de données Notion. Recherche dans la base "01. 📚 Catalogue formations" de SEDA Designer (database ID: ${NOTION_DB_ID}) toutes les formations dont le statut est "Actif".
-
-Pour chaque formation active, extrait :
-- Intitulé de la formation
-- Durée
-- Prix (sans CPF)
-- Financement éligible (CPF oui/non, FAFCEA, ALMA, OPCO)
-- Statut inscription (Ouvert / Complet / Fermé)
-- Prérequis
-- Public cible
-- Objectifs
-
-Retourne UNIQUEMENT un objet JSON valide, sans markdown ni backticks :
-{"formations":[{"titre":"...","duree":"...","prix_sans_cpf":000,"cpf_eligible":true,"prix_avec_cpf":000,"fafcea":true,"alma":true,"statut_inscription":"Ouvert","prerequis":"...","public":"...","objectifs":"...","places_max":3}],"last_updated":"ISO date"}
-
-Règles prix avec CPF : Extensions cils 2j→1500, 3j→1800 | Combo Browlift+Réhaussement→1500 | Microshading 3j→2250,4j→2400,5j→2800 | Blush Lips 2j→1800,3j→2250,4j→2400 | Combo Micro+Lips 3j→2400,4j→2800,5j→3200 | Perfectionnement 1j→1400,2j→1650 | Coaching→1500
-Places max : dermopigmentation=2, coaching=1, autres=3.`;
+    const WHATSAPP = "https://wa.me/33762901319";
 
     const SYSTEM_BASE = (notionData) => `
 Tu es l'Assistante SEDA, l'assistante virtuelle officielle de SEDA Designer — centre de formation esthétique certifié Qualiopi, fondé par Seda Keskin à Sens (89), 73 rue de la République.
@@ -194,37 +173,23 @@ Formule : "Pour ça, le plus simple c'est de contacter Seda directement sur What
         setSyncing(true);
         setSyncError(false);
         try {
-          const res = await fetch("/.netlify/functions/claude", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-6",
-              max_tokens: 2000,
-              system: FETCH_PROMPT,
-              messages: [{ role: "user", content: "Extrais toutes les formations actives de SEDA Designer depuis Notion." }],
-              mcp_servers: [{ type: "url", url: NOTION_MCP, name: "notion" }],
-            }),
-          });
-          const data = await res.json();
-          const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed?.formations) {
-              const lines = parsed.formations.map(f => {
-                const cpf = f.cpf_eligible ? `Avec CPF : ${f.prix_avec_cpf}€` : "Non éligible CPF";
-                const fin = [f.cpf_eligible && "CPF ✅", f.fafcea && "FAFCEA ✅", f.alma && "Alma ✅"].filter(Boolean).join(" · ");
-                return `### ${f.titre}\n- Durée : ${f.duree}\n- Sans CPF : ${f.prix_sans_cpf}€ | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis}`;
-              }).join("\n\n");
-              setNotionData(`${lines}\n\n(Synchronisé depuis Notion — ${new Date().toLocaleDateString("fr-FR")})`);
-              setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nMes informations sont synchronisées en direct avec Notion — je connais toutes les formations, tarifs et disponibilités à jour.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
-              setMsgCount(1);
-              setSyncing(false);
-              return;
-            }
-          }
-          throw new Error("No data");
+          const res = await fetch("/.netlify/functions/notion");
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const parsed = await res.json();
+          if (!parsed?.formations?.length) throw new Error("No formations returned");
+
+          const lines = parsed.formations.map(f => {
+            const cpf = f.cpf_eligible && f.prix_avec_cpf ? `Avec CPF : ${f.prix_avec_cpf}€` : "Non éligible CPF";
+            const fin = [f.cpf_eligible && "CPF ✅", f.fafcea && "FAFCEA ✅", f.alma && "Alma ✅", f.opco && "OPCO ✅"].filter(Boolean).join(" · ");
+            const prixSans = f.prix_sans_cpf != null ? `Sans CPF : ${f.prix_sans_cpf}€` : "Prix sur demande";
+            return `### ${f.titre}\n- Durée : ${f.duree || "—"}\n- ${prixSans} | ${cpf}\n- Financement : ${fin || "Auto-financement"}\n- Statut : ${f.statut_inscription || "—"} | Places max : ${f.places_max}\n- Prérequis : ${f.prerequis || "Aucun"}`;
+          }).join("\n\n");
+
+          setNotionData(`${lines}\n\n(Synchronisé depuis Notion — ${new Date().toLocaleDateString("fr-FR")})`);
+          setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nMes informations sont synchronisées en direct avec Notion — je connais toutes les formations, tarifs et disponibilités à jour.\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène !", id: 0 }]);
+          setMsgCount(1);
         } catch (e) {
+          console.error("Notion sync error:", e);
           setSyncError(true);
           setNotionData(FALLBACK_DATA);
           setMessages([{ role: "assistant", content: "Bonjour ! Je suis l'assistante de Seda, fondatrice de SEDA Designer 🤍\n\nTu cherches à te former en esthétique ou tu gères un organisme de formation ? Dis-moi ce qui t'amène, je suis là pour t'orienter.", id: 0 }]);
