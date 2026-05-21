@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistante SEDA — Formations & Prestations Esthétique</title>
-  <meta name="description" content="Assistante virtuelle SEDA Designer — Formations Qualiopi & Prestations esthétique à Sens (89)" />
+  <title>Lumya - studio — Formations & Prestations Esthétique</title>
+  <meta name="description" content="Lumya - studio, l'assistante virtuelle de SEDA Designer — Formations Qualiopi & Prestations esthétique à Sens (89)" />
   <!-- Favicon S -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23C6C0B6'/><text y='.9em' font-size='80' font-family='serif' x='15' fill='white'>S</text></svg>" />
   <!-- React + Babel CDN -->
@@ -31,7 +31,7 @@
     const SALON_HOURS = "Lun 9h-21h · Mar-Ven 9h-20h · Sam 9h30-20h · Dim 9h-19h";
 
     const SYSTEM_BASE = (notionData) => `
-Tu es l'Assistante SEDA, l'assistante virtuelle officielle de SEDA Designer — centre de formation esthétique certifié Qualiopi, fondé par Seda Keskin à Sens (89), 73 rue de la République.
+Tu es Lumya - studio, l'assistante virtuelle officielle de SEDA Designer — centre de formation esthétique certifié Qualiopi, fondé par Seda Keskin à Sens (89), 73 rue de la République.
 
 ## TA PERSONNALITÉ
 Tu es chaleureuse, directe, professionnelle mais accessible. Tu parles comme une grande sœur bienveillante et experte. Tu tutoies systématiquement. Tes phrases sont courtes et claires. Tu guides toujours vers l'action.
@@ -350,13 +350,13 @@ Quand tu invites la prospect à choisir un axe, présente TOUJOURS ces 6 catégo
           }).join("\n\n---\n\n");
 
           setNotionData(`${lines}\n\n(Catalogue à jour au ${new Date().toLocaleDateString("fr-FR")})`);
-          setMessages([{ role: "assistant", content: "Bienvenue chez SEDA Designer 🤍\n\nJe suis l'assistante de Seda. Je connais toutes les formations, tarifs et prestations du salon à jour en temps réel.\n\nTu cherches :\n🎓 une formation (devenir pro en esthétique)\n💋 ou une prestation pour toi (te faire faire un soin chez Seda à Sens) ?", id: 0 }]);
+          setMessages([{ role: "assistant", content: "Bienvenue chez SEDA Designer 🤍\n\nJe suis Lumya - studio, l'assistante de Seda. Je connais toutes les formations, tarifs et prestations du salon à jour en temps réel.\n\nTu cherches :\n🎓 une formation (devenir pro en esthétique)\n💋 ou une prestation pour toi (te faire faire un soin chez Seda à Sens) ?", id: 0 }]);
           setMsgCount(1);
         } catch (e) {
           console.error("Notion sync error:", e);
           setSyncError(true);
           setNotionData(FALLBACK_DATA);
-          setMessages([{ role: "assistant", content: "Bienvenue chez SEDA Designer 🤍\n\nJe suis l'assistante de Seda — je peux t'orienter sur les formations ET sur les prestations du salon.\n\nTu cherches :\n🎓 une formation (devenir pro en esthétique)\n💋 ou une prestation pour toi (te faire faire un soin chez Seda à Sens) ?", id: 0 }]);
+          setMessages([{ role: "assistant", content: "Bienvenue chez SEDA Designer 🤍\n\nJe suis Lumya - studio, l'assistante de Seda — je peux t'orienter sur les formations ET sur les prestations du salon.\n\nTu cherches :\n🎓 une formation (devenir pro en esthétique)\n💋 ou une prestation pour toi (te faire faire un soin chez Seda à Sens) ?", id: 0 }]);
           setMsgCount(1);
         }
         setSyncing(false);
@@ -429,7 +429,7 @@ Quand tu invites la prospect à choisir un axe, présente TOUJOURS ces 6 catégo
                   </div>
                 </div>
                 <div className="header-bottom">
-                  <span className="assistant-label">✦ Assistante SEDA</span>
+                  <span className="assistant-label">✦ Lumya - studio</span>
                   <div className="notion-badge">
                     {syncing ? (
                       <span className="sync-loading"><span className="sync-dot"/><span className="sync-dot"/><span className="sync-dot"/> Connexion…</span>
